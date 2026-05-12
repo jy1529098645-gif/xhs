@@ -32,10 +32,17 @@ def _gk(d: dict, *keys, default=None):
     return default
 
 
+_NOTE_ID_HEX = __import__("re").compile(r"^[0-9a-f]{24}$")
+
+
 def parse_note_card(item: dict, source_type: str = "", source_value: str = "") -> Optional[dict]:
     """Parse a 'note card' from search/profile/topic feed → discovery row."""
     note_id = item.get("id") or item.get("note_id") or _g(item, "note_card", "note_id")
     if not note_id:
+        return None
+    # Real xhs note_ids are 24-char lowercase hex. Ad/placeholder slots in the
+    # feed sometimes use UUIDs — those aren't notes and waste worker time.
+    if not _NOTE_ID_HEX.match(str(note_id)):
         return None
     xsec_token = (item.get("xsec_token") or _g(item, "note_card", "xsec_token")
                   or item.get("xsecToken"))

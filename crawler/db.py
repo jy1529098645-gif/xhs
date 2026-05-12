@@ -179,12 +179,65 @@ def pending_queue(limit: int = 50, retry_errors: bool = False) -> list[sqlite3.R
         ))
 
 
+MAX_ATTEMPTS = 6  # after this many fails (including transient retries), give up
+
+
+def claim_queue_items(limit: int = 20, retry_errors: bool = False) -> list[sqlite3.Row]:
+    """Atomically claim N pending items by marking them as 'in_progress'.
+
+    Skips items with attempts >= MAX_ATTEMPTS so persistent-throttle items
+    don't infinite-loop. They get marked 'error' on next mark_queue call.
+    """
+    statuses = ("pending", "error") if retry_errors else ("pending",)
+    placeholders = ",".join("?" * len(statuses))
+    with tx() as c:
+        # Recover stuck items from dead workers
+        c.execute(
+            "UPDATE discover_queue SET status='pending' "
+            "WHERE status='in_progress' AND last_attempt_at < ?",
+            (now_s() - 3600,),
+        )
+        # Mark perpetual-fail items as gave_up so they're skipped
+        c.execute(
+            "UPDATE discover_queue SET status='error', last_error='max_attempts_reached' "
+            "WHERE status='pending' AND attempts >= ?",
+            (MAX_ATTEMPTS,),
+        )
+        # Atomic claim
+        rows = c.execute(
+            f"UPDATE discover_queue SET status='in_progress', last_attempt_at=? "
+            f"WHERE note_id IN ("
+            f"  SELECT note_id FROM discover_queue "
+            f"  WHERE status IN ({placeholders}) AND attempts < ? "
+            f"  ORDER BY discovered_at ASC LIMIT ?"
+            f") RETURNING *",
+            (now_s(), *statuses, MAX_ATTEMPTS, limit),
+        ).fetchall()
+        return list(rows)
+
+
 def mark_queue(note_id: str, status: str, error: Optional[str] = None) -> None:
     with tx() as c:
         c.execute(
             "UPDATE discover_queue SET status=?, last_error=?, "
             "attempts=attempts+1, last_attempt_at=? WHERE note_id=?",
             (status, error, now_s(), note_id),
+        )
+
+
+def release_claim(note_id: str, reason: Optional[str] = None) -> None:
+    """Return a claimed item to 'pending'.
+
+    Used when we couldn't process the note for transient reasons (IP throttle,
+    network error). Bumps attempts so persistently-failing items eventually
+    get diverted (claim_queue_items has a default attempts cap).
+    """
+    with tx() as c:
+        c.execute(
+            "UPDATE discover_queue SET status='pending', last_error=?, "
+            "attempts=attempts+1, last_attempt_at=? "
+            "WHERE note_id=? AND status='in_progress'",
+            (reason, now_s(), note_id),
         )
 
 

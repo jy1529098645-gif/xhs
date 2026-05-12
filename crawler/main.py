@@ -35,7 +35,7 @@ def _split(value: str) -> list[str]:
 
 def cmd_login(args):
     from .login import run_login
-    ok = run_login(timeout_seconds=args.timeout)
+    ok = run_login(timeout_seconds=args.timeout, force=args.force)
     sys.exit(0 if ok else 1)
 
 
@@ -78,6 +78,7 @@ def cmd_detail(args):
         retry_errors=args.retry_errors,
         max_notes=args.max_notes,
         download_images=not args.no_images,
+        worker_id=getattr(args, "worker_id", 0),
     )
     logger.success("Detail batch done: {}", counts)
 
@@ -103,12 +104,25 @@ def cmd_dashboard(args):
     logger.info("Open in browser: file:///{}", out.as_posix())
 
 
+def cmd_http_drain(args):
+    from .httpx_detail import run_http_drain_sync
+    counts = run_http_drain_sync(
+        concurrency=args.concurrency,
+        retry_errors=args.retry_errors,
+        max_notes=args.max_notes,
+        download_images=not args.no_images,
+    )
+    logger.success("HTTP drain done: {}", counts)
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="crawler", description="xhs scraper")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("login", help="open Chrome for QR-scan login")
     p.add_argument("--timeout", type=int, default=300)
+    p.add_argument("--force", action="store_true",
+                   help="clear cookies first and always prompt for QR rescan")
     p.set_defaults(func=cmd_login)
 
     p = sub.add_parser("search", help="discover via keyword search")
@@ -136,9 +150,18 @@ def build_parser() -> argparse.ArgumentParser:
     _add_then_detail(p)
     p.set_defaults(func=cmd_urls)
 
-    p = sub.add_parser("detail", help="scrape pending queue entries")
+    p = sub.add_parser("detail", help="scrape pending queue entries (Chrome-based)")
     _add_detail_args(p)
     p.set_defaults(func=cmd_detail)
+
+    p = sub.add_parser("http-drain",
+                       help="fast HTTP drain: SSR HTML parsing, no Chrome, "
+                            "high concurrency")
+    p.add_argument("--concurrency", type=int, default=10)
+    p.add_argument("--retry-errors", action="store_true")
+    p.add_argument("--max-notes", type=int, default=None)
+    p.add_argument("--no-images", action="store_true")
+    p.set_defaults(func=cmd_http_drain)
 
     p = sub.add_parser("stats")
     p.set_defaults(func=cmd_stats)
@@ -166,6 +189,8 @@ def _add_detail_args(p: argparse.ArgumentParser, with_prefix: bool = True) -> No
     p.add_argument("--max-notes", type=int, default=None)
     p.add_argument("--no-images", action="store_true",
                    help="skip image downloads (still store URLs)")
+    p.add_argument("--worker-id", type=int, default=0,
+                   help="worker index for parallel runs (each uses its own Chrome profile)")
 
 
 def main(argv=None):

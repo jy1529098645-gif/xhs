@@ -178,35 +178,89 @@ def _cookies_dict(b: Browser) -> dict:
 
 def run_detail_batch(comment_pages: int = 5, retry_errors: bool = False,
                      max_notes: Optional[int] = None,
-                     download_images: bool = True) -> dict:
-    """Pull pending entries from the queue and scrape each."""
+                     download_images: bool = True,
+                     worker_id: int = 0) -> dict:
+    """Pull queue items and scrape each. Workers safely parallelizable via
+    atomic claim_queue_items.
+
+    Runs in anonymous mode: clears any stored xhs cookies before the first
+    request so we don't trip risk-control on a soft-banned account.
+
+    Detects IP-level throttling (note pages redirect to /login). After
+    `MAX_LOGIN_STREAK` consecutive redirects, closes the browser and reopens
+    it; if proxies are configured this picks up a fresh IP via the tunnel.
+    """
+    import random as _r
     from .browser import browser
-    counts = {"ok": 0, "fail": 0, "skipped": 0}
-    batch_idx = 0
-    with browser() as b:
-        while True:
-            batch = db.pending_queue(limit=config.BATCH_SIZE, retry_errors=retry_errors)
-            if not batch:
-                break
-            for row in batch:
-                nid = row["note_id"]
-                try:
-                    ok = scrape_note(b, nid, row["xsec_token"], row["xsec_source"],
-                                     comment_pages=comment_pages,
-                                     download_images=download_images)
+    MAX_LOGIN_STREAK = 3
+    counts = {"ok": 0, "fail": 0, "skipped": 0, "restarts": 0}
+    tag = f"[w{worker_id}] " if worker_id else ""
+
+    while True:  # outer restart loop
+        login_streak = 0
+        need_restart = False
+        with browser(worker_id=worker_id) as b:
+            try:
+                b.page.get(f"{config.XHS_HOST}/")
+                time.sleep(1)
+                b.page.set.cookies.clear()
+                logger.info("{}Cleared cookies — anonymous mode", tag)
+            except Exception as e:
+                logger.warning("{}cookie clear failed: {}", tag, e)
+
+            while not need_restart:
+                batch = db.claim_queue_items(
+                    limit=config.BATCH_SIZE, retry_errors=retry_errors
+                )
+                if not batch:
+                    return counts  # queue empty, done for good
+
+                for row in batch:
+                    nid = row["note_id"]
+                    try:
+                        ok = scrape_note(
+                            b, nid, row["xsec_token"], row["xsec_source"],
+                            comment_pages=comment_pages,
+                            download_images=download_images,
+                        )
+                    except Exception as e:
+                        logger.exception("{}scrape_note crashed for {}", tag, nid)
+                        db.mark_queue(nid, "error", str(e))
+                        counts["fail"] += 1
+                        ok = False
+                        continue
+                    final_url = (b.page.url or "")
                     if ok:
                         db.mark_queue(nid, "done")
                         counts["ok"] += 1
+                        login_streak = 0
+                        logger.info("{}ok {} ({} done)", tag, nid[:12], counts["ok"])
+                    elif "/login" in final_url:
+                        # IP throttle — release the claim so another worker
+                        # (or a future re-attempt) can try cleanly. Don't bump attempts.
+                        db.release_claim(nid, "ip_blocked")
+                        login_streak += 1
+                        logger.warning("{}login redirect (streak {}/{}) — {}",
+                                       tag, login_streak, MAX_LOGIN_STREAK, nid[:12])
+                        if login_streak >= MAX_LOGIN_STREAK:
+                            counts["restarts"] += 1
+                            need_restart = True
+                            break
                     else:
                         db.mark_queue(nid, "error", "no_data")
                         counts["fail"] += 1
-                except Exception as e:
-                    logger.exception("scrape_note crashed for {}", nid)
-                    db.mark_queue(nid, "error", str(e))
-                    counts["fail"] += 1
-                b.sleep_between_notes()
-                if max_notes and (counts["ok"] + counts["fail"]) >= max_notes:
-                    return counts
-            batch_idx += 1
-            b.sleep_between_batches()
-    return counts
+                    b.sleep_between_notes()
+                    if max_notes and counts["ok"] >= max_notes:
+                        return counts
+                if need_restart:
+                    break
+                b.sleep_between_batches()
+
+        # Browser is closed; tunnel proxies will assign a new IP on next launch
+        if need_restart:
+            wait = _r.uniform(15, 30)
+            logger.warning("{}Restart #{} — sleeping {:.0f}s before new IP",
+                           tag, counts["restarts"], wait)
+            time.sleep(wait)
+        else:
+            return counts

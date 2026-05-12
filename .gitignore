@@ -29,3 +29,4 @@ debug_one_note.py
 *.log
 crawler.log
 crawler.log.*
+state/proxies.txt

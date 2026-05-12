@@ -16,18 +16,33 @@ from . import db
 class Browser:
     """Wraps a ChromiumPage. Use as a singleton per process."""
 
-    def __init__(self, headless: bool = False):
+    def __init__(self, headless: bool = False, worker_id: int = 0,
+                 proxy: str | None = None):
         opts = ChromiumOptions()
-        opts.set_user_data_path(str(config.BROWSER_PROFILE_DIR))
+        opts.set_user_data_path(str(config.get_profile_dir(worker_id)))
+        # Each worker needs a distinct debug port so multiple Chromes can coexist.
         opts.set_argument("--lang=zh-CN")
         opts.set_argument("--disable-blink-features=AutomationControlled")
         opts.set_argument("--no-default-browser-check")
         opts.set_argument("--no-first-run")
+        # Prevent WebRTC from leaking real IP through STUN even when proxied
+        opts.set_argument("--force-webrtc-ip-handling-policy=disable_non_proxied_udp")
+        # Stagger window position so parallel workers don't fully overlap on screen
+        if worker_id:
+            opts.set_argument(f"--window-position={worker_id * 30},{worker_id * 30}")
+        # Proxy: fall back to worker-mapped proxy from config if not explicitly passed
+        if proxy is None:
+            proxy = config.get_proxy_for_worker(worker_id)
+        if proxy:
+            opts.set_proxy(proxy)
+            logger.info("w{} using proxy: {}", worker_id, _sanitize_proxy(proxy))
         if headless:
             opts.headless(True)
         self.page = ChromiumPage(addr_or_opts=opts)
         self.page.set.window.size(1440, 900)
         self._listening = False
+        self.worker_id = worker_id
+        self.proxy = proxy
 
     # ----- network listener -----
 
@@ -224,9 +239,16 @@ class Browser:
             self.page.quit()
 
 
+def _sanitize_proxy(p: str) -> str:
+    """Hide password in proxy URL when logging."""
+    import re
+    return re.sub(r"://[^:]+:([^@]+)@", r"://***:***@", p)
+
+
 @contextmanager
-def browser(headless: bool = False) -> Iterator[Browser]:
-    b = Browser(headless=headless)
+def browser(headless: bool = False, worker_id: int = 0,
+            proxy: str | None = None) -> Iterator[Browser]:
+    b = Browser(headless=headless, worker_id=worker_id, proxy=proxy)
     try:
         yield b
     finally:
