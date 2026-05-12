@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Project data (local-only, never commit)
+data/images/
+data/xhs.db
+data/xhs.db-journal
+data/xhs.db-wal
+data/xhs.db-shm
+state/cookies.json
+state/progress.json
+state/profile/
+
+# Diagnostic scratch
+debug_one_note/
+debug_one_note.py
+
+# Exports — uncomment to ignore them too
+# data/exports/
+
+# IDE
+.idea/
+.vscode/
+.claude/
+*.log
+crawler.log
+crawler.log.*
