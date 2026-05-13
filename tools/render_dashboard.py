@@ -209,8 +209,28 @@ HTML_TEMPLATE = r"""<!doctype html>
          background: var(--tag-bg); color: var(--muted); }
   .author-row { font-size: 11px; color: var(--muted); }
 
-  #sentinel { grid-column: 1/-1; height: 80px; display: flex;
-              align-items: center; justify-content: center; color: var(--muted); font-size: 12px; }
+  .pagination {
+    max-width: 1400px; margin: 24px auto 8px;
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+    flex-wrap: wrap;
+  }
+  .pagination button {
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--panel); color: var(--fg); font-size: 13px; cursor: pointer;
+    transition: all .15s;
+  }
+  .pagination button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pagination button:disabled { opacity: .35; cursor: not-allowed; }
+  .pagination button.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .pagination .page-info { color: var(--muted); font-size: 12px; padding: 0 8px; }
+  .pagination input.page-jump {
+    width: 60px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
+    text-align: center; font-size: 13px; background: var(--panel); color: var(--fg);
+  }
+  .pagination select.page-size {
+    padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--panel); font-size: 13px; color: var(--fg);
+  }
 
   /* Modal */
   .modal-overlay {
@@ -292,7 +312,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   <span class="loading-chip" id="loading-chip">加载中…</span>
 </div>
 <main id="grid"></main>
-<div id="sentinel"></div>
+<div class="pagination" id="pagination-top"></div>
 
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-body"></div>
@@ -302,9 +322,9 @@ HTML_TEMPLATE = r"""<!doctype html>
 <script>
 const DATA = __DATA__;
 
-const PAGE_SIZE = 60;
-let currentList = [];     // currently filtered + sorted full list (refs to notes)
-let renderedCount = 0;    // how many cards already in DOM
+let PAGE_SIZE = 60;
+let currentList = [];      // filtered + sorted list
+let currentPage = 1;
 let pendingFilterTimer = null;
 
 const fmt = (n) => {
@@ -326,7 +346,7 @@ const search = document.getElementById('search');
 const sortSel = document.getElementById('sort');
 const countChip = document.getElementById('count-chip');
 const loadingChip = document.getElementById('loading-chip');
-const sentinel = document.getElementById('sentinel');
+const paginationEl = document.getElementById('pagination-top');
 
 document.getElementById('stats').textContent =
   `共 ${DATA.stats.notes} 篇笔记 · ${DATA.stats.comments} 条评论 · ${DATA.stats.images} 张图片 · `
@@ -363,19 +383,68 @@ function cardHTML(n) {
   `;
 }
 
-function renderPage() {
-  // Append next PAGE_SIZE items
-  const end = Math.min(renderedCount + PAGE_SIZE, currentList.length);
-  const chunk = currentList.slice(renderedCount, end);
-  if (chunk.length === 0) return;
-  const frag = document.createElement('div');
-  frag.innerHTML = chunk.map(cardHTML).join('');
-  // Move all children of frag into grid (faster than re-setting innerHTML)
-  while (frag.firstChild) grid.appendChild(frag.firstChild);
-  renderedCount = end;
-  sentinel.textContent = (renderedCount < currentList.length)
-    ? `下滑加载更多… (已显示 ${renderedCount} / ${currentList.length})`
-    : `— 已显示全部 ${currentList.length} —`;
+function totalPages() {
+  return Math.max(1, Math.ceil(currentList.length / PAGE_SIZE));
+}
+
+function goToPage(p) {
+  const total = totalPages();
+  currentPage = Math.max(1, Math.min(total, p));
+  renderCurrentPage();
+  renderPagination();
+  // Scroll to top of grid smoothly
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function renderCurrentPage() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, currentList.length);
+  const chunk = currentList.slice(start, end);
+  if (!chunk.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;">无匹配结果</div>';
+    return;
+  }
+  grid.innerHTML = chunk.map(cardHTML).join('');
+}
+
+function renderPagination() {
+  const total = totalPages();
+  const showCount = currentList.length;
+  if (showCount === 0) { paginationEl.innerHTML = ''; return; }
+
+  // Show: « ‹ 1 ... 5 6 [7] 8 9 ... 100 › »  with jump-to input + page-size
+  const window_radius = 2;
+  const pages = new Set([1, total]);
+  for (let i = currentPage - window_radius; i <= currentPage + window_radius; i++) {
+    if (i >= 1 && i <= total) pages.add(i);
+  }
+  const pageList = [...pages].sort((a,b) => a-b);
+
+  let html = `
+    <button onclick="goToPage(1)" ${currentPage===1?'disabled':''}>« 首页</button>
+    <button onclick="goToPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹ 上一页</button>
+  `;
+  let lastP = 0;
+  for (const p of pageList) {
+    if (lastP && p - lastP > 1) html += `<span class="page-info">…</span>`;
+    html += `<button onclick="goToPage(${p})" class="${p===currentPage?'active':''}">${p}</button>`;
+    lastP = p;
+  }
+  html += `
+    <button onclick="goToPage(${currentPage+1})" ${currentPage===total?'disabled':''}>下一页 ›</button>
+    <button onclick="goToPage(${total})" ${currentPage===total?'disabled':''}>末页 »</button>
+    <span class="page-info">跳到</span>
+    <input type="number" class="page-jump" min="1" max="${total}" value="${currentPage}"
+           onchange="goToPage(parseInt(this.value))" />
+    <span class="page-info">/ ${total} 页 ·</span>
+    <select class="page-size" onchange="PAGE_SIZE=parseInt(this.value); currentPage=1; renderCurrentPage(); renderPagination();">
+      <option value="30" ${PAGE_SIZE===30?'selected':''}>30/页</option>
+      <option value="60" ${PAGE_SIZE===60?'selected':''}>60/页</option>
+      <option value="120" ${PAGE_SIZE===120?'selected':''}>120/页</option>
+      <option value="240" ${PAGE_SIZE===240?'selected':''}>240/页</option>
+    </select>
+  `;
+  paginationEl.innerHTML = html;
 }
 
 // Map UI sort key → card field key
@@ -394,7 +463,6 @@ function applyFilter() {
     let list = DATA.cards;
     if (q) {
       list = list.filter(n => {
-        // Search across title + body preview + author + tags
         if (n.title && n.title.toLowerCase().indexOf(q) !== -1) return true;
         if (n.bp && n.bp.toLowerCase().indexOf(q) !== -1) return true;
         if (n.an && n.an.toLowerCase().indexOf(q) !== -1) return true;
@@ -404,10 +472,10 @@ function applyFilter() {
     }
     list = list.slice().sort((a,b) => (b[sortField] || 0) - (a[sortField] || 0));
     currentList = list;
-    renderedCount = 0;
-    grid.innerHTML = '';
+    currentPage = 1;            // reset to page 1 on new filter/sort
     countChip.textContent = `匹配 ${list.length} 篇`;
-    renderPage();
+    renderCurrentPage();
+    renderPagination();
     loadingChip.classList.remove('show');
   }, 0);
 }
@@ -419,11 +487,12 @@ search.addEventListener('input', () => {
 });
 sortSel.addEventListener('change', applyFilter);
 
-// Infinite scroll via IntersectionObserver
-const io = new IntersectionObserver(entries => {
-  if (entries[0].isIntersecting) renderPage();
-}, {rootMargin: '400px'});
-io.observe(sentinel);
+// Keyboard pagination (← / →)
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goToPage(currentPage - 1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); goToPage(currentPage + 1); }
+});
 
 // Modal — delegate card click
 grid.addEventListener('click', e => {
