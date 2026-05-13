@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>AcademiCats × 小红书数据库 主计划</title>
+  <style>
+    @page { size: A4; margin: 18mm 14mm 18mm 14mm; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.55;
+      color: #1a1a1a;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      font-size: 22pt;
+      color: #c11d2a;
+      border-bottom: 3px solid #c11d2a;
+      padding-bottom: 8px;
+      margin-top: 30px;
+      page-break-before: auto;
+    }
+    h1:first-of-type { margin-top: 0; }
+    h2 {
+      font-size: 15pt;
+      color: #2c3e50;
+      border-left: 4px solid #c11d2a;
+      padding-left: 10px;
+      margin-top: 24px;
+      page-break-after: avoid;
+    }
+    h3 {
+      font-size: 12pt;
+      color: #34495e;
+      margin-top: 16px;
+      page-break-after: avoid;
+    }
+    h4 { font-size: 11pt; color: #555; margin-top: 12px; }
+    p { margin: 6px 0; }
+    ul, ol { margin: 6px 0; padding-left: 22px; }
+    li { margin: 3px 0; }
+    code {
+      font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+      font-size: 9.5pt;
+      background: #f4f4f6;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #d63384;
+    }
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 5px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-size: 9pt;
+      line-height: 1.4;
+      page-break-inside: avoid;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: #24292e;
+    }
+    blockquote {
+      border-left: 4px solid #ccc;
+      margin: 8px 0;
+      padding: 4px 12px;
+      color: #555;
+      background: #f9f9f9;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 10px 0;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px 9px;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f6;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: #fafafa; }
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 18px 0;
+    }
+    a { color: #c11d2a; text-decoration: none; }
+    .cover {
+      text-align: center;
+      padding: 60px 0 40px;
+    }
+    .cover h1 {
+      font-size: 28pt;
+      border: none;
+      margin: 0;
+    }
+    .cover .subtitle {
+      font-size: 13pt;
+      color: #666;
+      margin-top: 16px;
+    }
+    .cover .meta {
+      font-size: 11pt;
+      color: #999;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+<h1 id="academicats-master-plan">AcademiCats × 小红书数据库 主计划 (MASTER PLAN)</h1>
+<blockquote>
+<p>最后更新：2026-05-13
+仓库：<code>H:\xhs</code>
+这份文档是 handoff 文档 —— 切换对话后，把这个文件 + 仓库一起喂给新 Claude 就能继续。</p>
+</blockquote>
+<hr>
+<h2 id="0">0. 项目使命</h2>
+<p><strong>AcademiCats</strong> 是面向<strong>下沉用户</strong>的 AI 学术工作台 ——
+<strong>一站式一条龙快捷服务</strong>：检索 → 引用 → AI 代写框架 → 查重去重 → 审核 → 修改。</p>
+<h3 id="_1">产品定位</h3>
+<ul>
+<li><strong>不是给学术大牛的精修工具</strong>，是给<strong>下沉学生群体</strong>的"快捷救命包"</li>
+<li><strong>不假装自己是研究助手</strong>：AI 实质就是代写引擎，包装为「引导式论文生成框架」</li>
+<li><strong>用户名义上主导内容</strong>，实际上 AI 出绝大部分文字、用户负责定方向 + 验收</li>
+<li><strong>核心竞争力 = 速度 + 一条龙</strong>（不是质量、不是学术深度）</li>
+</ul>
+<h3 id="_2">核心服务链（也就是产品功能模块）</h3>
+<ol>
+<li><strong>多资源平台快速文献检索（十几秒级）</strong> ⭐ 核心 USP
+   - 一次输入，并发查询 知网 / Web of Science / Scopus / PubMed / Google Scholar 等
+   - 秒级返回（传统跨库手动查 → 几十分钟）
+   - 给下沉用户：<strong>不用再翻 5 个数据库</strong></li>
+<li><strong>一键引用</strong>
+   - 文献搜到直接插入正文，自动生成 citation（APA / MLA / Chicago / GB/T-7714）
+   - 引用与参考文献列表自动同步</li>
+<li><strong>引导式论文框架生成（= AI 代写）</strong>
+   - 主题输入 → AI 给大纲 → AI 填章节内容 → 用户调方向
+   - <strong>主打"一条龙"</strong>：用户不需要一段段写，AI 跑通整个流程</li>
+<li><strong>AI 查重 / 去重 / 编辑</strong>
+   - 重复率检测（对标知网 / Turnitin）
+   - AI 改写降重（核心刚需，下沉用户必踩坑）
+   - 语言润色</li>
+<li><strong>文章审核（自审稿）</strong>
+   - AI 用同行评议视角看：逻辑链 / 论证 / 引用充分性 / 语法</li>
+<li><strong>重新修改 / 迭代</strong>
+   - 基于审核反馈 + 用户调整 → 下一轮 AI 重写部分段落
+   - 整个循环：用户主导方向，AI 主导文字劳动</li>
+</ol>
+<h3 id="_3">目标用户画像</h3>
+<ul>
+<li><strong>主要</strong>：海外留学生（"留子"）写 essay / paper / assignment（<strong>赶 ddl，要快</strong>）</li>
+<li><strong>同等重要</strong>：国内本科 / 研究生写毕业论文 / 开题报告（<strong>降重痛</strong>）</li>
+<li><strong>边缘</strong>：博士 / 期刊投稿（这群人不是我们的下沉受众）</li>
+</ul>
+<p>下沉特征：
+- 不挑剔学术质量，要的是"交得上去 + 不被查重"
+- 价格敏感
+- 决策点：能不能省时间、能不能避开降 AI 率 / 查重坑</p>
+<h3 id="_4">为什么爬小红书</h3>
+<p>xhs 是下沉学生<strong>痛点最集中、表达最直白</strong>的平台。爬来的数据用于：</p>
+<ol>
+<li><strong>产品 feature 优先级</strong>
+   - 评论里最高频的"求 prompt 模板"、"求工具链接"、"怎么降 AI 率"
+   - → 反推：用户买产品时最想要什么</li>
+<li><strong>竞品分析</strong>
+   - 同赛道有谁（chatgpt 写论文、DeepSeek 写论文、各类 AI 代写工具）
+   - 他们被用户夸什么、骂什么
+   - 我们怎么差异化（<strong>速度 + 一条龙</strong> 是我们的牌）</li>
+<li><strong>冷启动起号策略</strong>
+   - 哪个 niche CR 低（论文降重？查重避坑？文献综述？）
+   - 什么内容形式 ROI 高（图文 vs 视频、教程 vs 测评）
+   - 多久发一次、配什么 hashtag</li>
+<li><strong>营销内容参考</strong>
+   - 爆款标题 hook 结构（数字 / 痛点 / 故事）
+   - 高赞 note 的内容骨架（问题 → 痛点 → 工具 → 步骤 → 效果）
+   - 转化点（评论里被问"求私信"、"求链接"的内容形态）</li>
+</ol>
+<hr>
+<h2 id="1">1. 当前数据库快照</h2>
+<p><strong><code>data/xhs.db</code></strong> (SQLite, WAL mode)</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总 notes</td>
+<td>429</td>
+</tr>
+<tr>
+<td>图文 note</td>
+<td>397</td>
+</tr>
+<tr>
+<td>视频 note</td>
+<td>32</td>
+</tr>
+<tr>
+<td>实质 body（&gt;100 字符）</td>
+<td>307</td>
+</tr>
+<tr>
+<td>评论总数（已抓）</td>
+<td>1,497</td>
+</tr>
+<tr>
+<td>有评论的 note</td>
+<td>98 / 429</td>
+</tr>
+<tr>
+<td>图片数</td>
+<td>1,624（全本地）</td>
+</tr>
+<tr>
+<td>不同作者</td>
+<td>376</td>
+</tr>
+<tr>
+<td>总点赞</td>
+<td>726,945</td>
+</tr>
+<tr>
+<td>总收藏</td>
+<td>670,270</td>
+</tr>
+<tr>
+<td>总评论（xhs 上报）</td>
+<td>94,051</td>
+</tr>
+<tr>
+<td>最热 note</td>
+<td>「关于我一个学期写四篇文献综述」34K 赞</td>
+</tr>
+</tbody>
+</table>
+<p><strong>已覆盖关键词</strong>（每个 ~20-42 notes）：
+研究生日常 / 文献综述 / 开题报告 / 论文写作 / 文献阅读 / 科研工具 / 留学PS / 论文降重 / 毕业论文 / ChatGPT写论文 / 论文润色 / AI写论文</p>
+<p><strong>队列状态</strong>：done=429, error=48, pending=0（队列已空）</p>
+<hr>
+<h2 id="2-db-schema">2. DB Schema</h2>
+<h3 id="notes"><code>notes</code> (主表)</h3>
+<pre><code>note_id (PK), xsec_token, url, type, title, body,
+author_id, author_nickname, publish_time_ms, ip_location,
+liked_count, collected_count, comment_count, share_count, image_count,
+video_url, video_duration_ms,
+tags_json, at_users_json, raw_json,
+crawled_at, updated_at
+</code></pre>
+<h3 id="comments"><code>comments</code></h3>
+<pre><code>comment_id (PK), note_id, parent_id, user_id, nickname,
+content, like_count, sub_comment_count, publish_time_ms,
+ip_location, pictures_json, raw_json, crawled_at
+</code></pre>
+<h3 id="authors"><code>authors</code></h3>
+<pre><code>user_id (PK), nickname, red_id, avatar, description, gender,
+ip_location, fans_count, follows_count, notes_count, interaction_count
+</code></pre>
+<h3 id="images"><code>images</code></h3>
+<pre><code>note_id, idx, url, width, height, local_path, downloaded_at
+PRIMARY KEY (note_id, idx)
+</code></pre>
+<h3 id="discover_queue"><code>discover_queue</code> (爬虫队列)</h3>
+<pre><code>note_id (PK), xsec_token, xsec_source,
+source_type ('search'|'author'|'topic'|'url'),
+source_value (the keyword / user_id),
+status ('pending'|'in_progress'|'done'|'error'),
+attempts, last_error, discovered_at, last_attempt_at
+</code></pre>
+<h3 id="crawl_log"><code>crawl_log</code> (事件日志)</h3>
+<pre><code>id, ts, level, event, detail
+</code></pre>
+<hr>
+<h2 id="3">3. 技术栈与关键突破</h2>
+<h3 id="31">3.1 反爬突破（关键！）</h3>
+<p><strong>xhs 的反爬层叠</strong>：
+1. IP throttle（同 IP 高频访问 → 300013 redirect）
+2. TLS / JA3 fingerprint（plain httpx 直接被 reject）
+3. Browser fingerprint（无头 Chrome 被识别）
+4. X-s / X-t signature（所有 API 调用必须签）
+5. 账号权限（新号 / 买号没 API 权限）
+6. xsec_token 跟 a1 绑定（token 复用会跳登录）</p>
+<p><strong>我们的破解方法</strong>：
+- <code>curl_cffi</code> + <code>impersonate="chrome131"</code> —— TLS 指纹伪装成真 Chrome，0 风控、绕过 JA3
+- SSR HTML 提取 <code>window.__INITIAL_STATE__</code> —— 不调 API，直接拿 SSR 渲染好的 note 数据
+- 安全 stringify JS —— 应对 Vue 反应式对象的循环引用
+- 原子队列 claim（SQLite <code>UPDATE ... RETURNING</code>）—— 多 worker 并发安全
+- DrissionPage 真浏览器 + XHR 监听 —— 用于 Phase 1/2 discover 阶段</p>
+<h3 id="32">3.2 性能记录</h3>
+<ul>
+<li>curl_cffi http-drain: <strong>195 notes in 4 min</strong>, 0 rate-limited</li>
+<li>DrissionPage discover: ~30-40 notes / keyword / 5 min</li>
+</ul>
+<h3 id="33-python-venv">3.3 Python 依赖（已装在 <code>.venv/</code>）</h3>
+<pre><code>curl_cffi          # chrome131 TLS 伪装
+DrissionPage       # 真浏览器 + CDP
+loguru             # 日志
+xhshow             # xhs API 签名（备用，新号没权限可用）
+openpyxl           # 读外包 Excel
+pycryptodome       # AES（解 Chrome cookie，已弃用因 ABE）
+pywin32            # DPAPI（同上）
+</code></pre>
+<hr>
+<h2 id="4">4. 文件清单 (核心代码)</h2>
+<h3 id="crawler"><code>crawler/</code>（核心爬虫库）</h3>
+<ul>
+<li><strong><code>config.py</code></strong> — 路径常量、API 端点模式、pacing 参数</li>
+<li><strong><code>db.py</code></strong> — SQLite DAO，<code>upsert_note</code>、<code>upsert_comments</code>、<code>claim_queue_items</code>、<code>release_claim</code></li>
+<li><strong><code>browser.py</code></strong> — DrissionPage 封装，network listener、<code>read_initial_state</code>、风控检测</li>
+<li><strong><code>discover.py</code></strong> — 4 种 discover：search / author / topic / urls</li>
+<li><strong><code>detail.py</code></strong> — DrissionPage 详情抓取（慢但能抓评论 via XHR 监听）</li>
+<li><strong><code>httpx_detail.py</code></strong> — <strong>curl_cffi 快速详情抓取</strong>（生产主力，50-100 notes/min）</li>
+<li><strong><code>parse.py</code></strong> — <code>__INITIAL_STATE__</code> 解析、camelCase ↔ snake_case 兼容</li>
+<li><strong><code>login.py</code></strong> — DrissionPage 登录流程（带 force re-scan）</li>
+<li><strong><code>main.py</code></strong> — CLI 入口，<code>python -m crawler.main {search,detail,http-drain,...}</code></li>
+<li><strong><code>export.py</code></strong> — JSON / CSV 导出</li>
+</ul>
+<h3 id="tools"><code>tools/</code>（独立脚本工具）</h3>
+<p><strong>生产工具</strong>：
+- <code>login_extract.py</code> — 弹 Chrome 扫码登录，提取所有 cookies 到 <code>state/xhs_full_cookies.json</code>
+- <code>render_dashboard.py</code> — 渲染单文件 HTML 看板（GitHub Pages 兼容，no-referrer）
+- <code>build_analysis_package.py</code> — 拼接所有 notes + 评论 + 产品上下文成单个 .md 文件喂给 LLM
+- <code>auto_refresh.py</code> — 定时刷新看板 + git push 的 daemon
+- <code>phase3.py</code> — Phase 3 关键词扩展编排（等队列空后自动拓展）</p>
+<p><strong>诊断 / 一次性工具</strong>（保留作参考，多数已废）：
+- <code>test_browser_cookies.py</code> — 验证 Chrome cookie 提取（被 ABE 干掉）
+- <code>test_anonymous.py</code> — 验证匿名 curl_cffi 路径
+- <code>test_signed_search.py</code> / <code>test_comment_api.py</code> / <code>test_feed_api.py</code> / <code>test_feed_refresh.py</code> / <code>test_feed_full.py</code> — 签名 API 端点测试，确认账号权限
+- <code>test_explore_bare.py</code> — 测试 bare URL / pc_feed / discovery/item 变体
+- <code>test_ssr_with_login.py</code> — 登录态 SSR 是否含评论（否）
+- <code>test_anon_search.py</code> / <code>test_anon_signed_search.py</code> — 匿名搜索测试
+- <code>test_topic.py</code> / <code>test_author_profile.py</code> / <code>test_author_with_login.py</code> / <code>test_warmed_search.py</code> — 各种 discovery 路径测试
+- <code>comments_browser.py</code> — DrissionPage XHR 监听抓评论（受限于账号权限）
+- <code>discover_authors_ssr.py</code> — 匿名 author profile SSR 抓评（验证为空）
+- <code>dump_search_html.py</code> / <code>debug_author_structure.py</code> — 结构 dump
+- <code>check_missing.py</code> / <code>check_coverage.py</code> / <code>snapshot.py</code> / <code>rank_authors.py</code> / <code>filter_excel.py</code> / <code>inspect_excel.py</code> — 数据分析查询</p>
+<p><strong>辅助工具</strong>：
+- <code>apify_run.py</code> — Apify zhorex actor 调用包装
+- <code>proxy_chain.py</code> — 本地代理链（用过 Decodo 国内住宅代理，已不用）
+- <code>warmup.py</code> — Chrome profile 烘热脚本
+- <code>import_chrome_cookies.py</code> — 从用户 Chrome 导入 cookies（被 ABE 干掉）
+- <code>open_chrome_manual.py</code> — 打开 Chrome 调试入口</p>
+<h3 id="state"><code>state/</code>（运行时数据）</h3>
+<ul>
+<li><code>xhs_full_cookies.json</code> — 登录后所有 cookies（含 a1 + web_session）</li>
+<li><code>profile/</code>, <code>profile-w1..w7</code>, <code>profile-w99/</code> — Chrome profile（per worker）</li>
+<li><code>profile-login/</code> — QR 扫码登录用的 profile</li>
+<li><code>relevant_authors.txt</code> — 留子-写论文相关作者 ID + 昵称</li>
+<li><code>excel_relevant_urls.txt</code> — Excel 外包筛过的 URL（艺术留学，跟 AcademiCats 不直接相关）</li>
+<li><code>phase4_discover.log</code> — Phase 4 尝试日志</li>
+<li><code>comments_browser.log</code> — 浏览器抓评论尝试日志</li>
+</ul>
+<h3 id="data"><code>data/</code></h3>
+<ul>
+<li><code>xhs.db</code> — 主 SQLite</li>
+<li><code>images/&lt;note_id&gt;/&lt;idx&gt;.{jpg,png,webp}</code> — 原始图片</li>
+<li><code>exports/</code></li>
+<li><code>dashboard.html</code> — 看板（push 到 GitHub Pages）</li>
+<li><code>xhs_analysis_package.md</code> — LLM 分析包（646KB，全部 notes + 评论 + 产品上下文）</li>
+<li><code>apify/&lt;run_id&gt;.json</code> — Apify 历史 run 结果</li>
+<li><code>外包_任务3000.xlsx</code> — 外包数据（2891 行，<strong>艺术留学</strong>主题，<strong>与 AcademiCats 不直接对齐</strong>）</li>
+</ul>
+<hr>
+<h2 id="5-2026-05-xhs">5. <strong>2026-05 xhs 反爬升级（重要）</strong></h2>
+<p><strong>xhs 这一两周大规模收紧 web 端 anti-bot</strong>。所有匿名 + 弱账号路径都被堵了：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>之前状态</th>
+<th>现状 (2026-05-13)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>匿名 <code>/explore/&lt;id&gt;</code> SSR</td>
+<td>✅ 直接拿 note 详情</td>
+<td>✅ <strong>依然能用</strong>（curl_cffi chrome131）</td>
+</tr>
+<tr>
+<td>匿名 <code>/search_result?keyword=</code> SSR</td>
+<td>✅ feeds 数组有数据</td>
+<td>❌ feeds 是空数组</td>
+</tr>
+<tr>
+<td>匿名 <code>/search/notes</code> XHR</td>
+<td>（浏览器自动调）✅</td>
+<td>❌ -101 / 不再 fire</td>
+</tr>
+<tr>
+<td>匿名 <code>/search/recommend</code></td>
+<td>n/a</td>
+<td>❌ -101 no login</td>
+</tr>
+<tr>
+<td>匿名 topic SSR (<code>type=54</code>)</td>
+<td>✅</td>
+<td>❌ feeds 空</td>
+</tr>
+<tr>
+<td>匿名 <code>/user/profile/&lt;uid&gt;</code> SSR</td>
+<td>✅ user.notes 有内容</td>
+<td>❌ user.notes 是空骨架</td>
+</tr>
+<tr>
+<td>新号登录态 <code>/search/notes</code> (signed)</td>
+<td>n/a</td>
+<td>❌ -104 no permission</td>
+</tr>
+<tr>
+<td>新号登录态 <code>/comment/page</code> (signed)</td>
+<td>n/a</td>
+<td>❌ 461 stealth-fail（body 假装成功，data 空）</td>
+</tr>
+<tr>
+<td>新号登录态 <code>/feed</code> (signed)</td>
+<td>n/a</td>
+<td>⚠️ 起初 200 OK 后期 461（被风控 ramp-up）</td>
+</tr>
+<tr>
+<td>新号登录态 <code>/explore/&lt;id&gt;</code> 带旧 token</td>
+<td>n/a</td>
+<td>❌ 302 跳登录（token 跟新 a1 不绑）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键洞察</strong>：xsec_token 是跟 a1 绑死的。我们 DB 里的 token 是匿名 a1 时期抓的，跟新登录的 a1 不兼容，所以<strong>用登录账号去补漏漏掉的内容这条路走不通</strong>。</p>
+<p><strong>唯一未试的路径</strong>：用户本人长期使用的真实账号（3 个月+ 历史，有真实浏览/点赞/关注/发布）。这种账号 xhs 会授予完整 API 权限。</p>
+<hr>
+<h2 id="6-path-a-e">6. <strong>未来扩展路径 (Path A → E)</strong></h2>
+<h3 id="path-a">🥇 Path A：用户老号登录 → 全方位补齐（推荐）</h3>
+<p><strong>条件</strong>：用户用自己日常用的 xhs 账号扫码（不能是新注册、不能是买的）。</p>
+<p><strong>能解锁</strong>：
+- ✅ <code>/search/notes</code> signed API → 任意关键词搜索 + fresh xsec_token
+- ✅ <code>/comment/page</code> signed API → 补 92K+ 漏掉的评论
+- ✅ <code>/feed</code> signed API → 刷新现有 429 notes 的 like/collect/comment 计数
+- ✅ <code>/user_posted</code> → 批量抓单个作者的全部 notes（最多~200 per author）</p>
+<p><strong>预计产出</strong>：1500-3000 新 notes + 现有 notes 评论补齐 + 实时计数更新</p>
+<p><strong>执行步骤</strong>：
+1. 删 <code>state/profile-login/</code>，重跑 <code>python tools/login_extract.py</code>
+2. 用户扫码（用老号）
+3. 调一次 <code>python tools/test_comment_api.py</code> 验证（要看到 code 0 + 真实评论）
+4. 验证通过则：
+   - 写 <code>tools/signed_search.py</code>（curl_cffi + xhshow，迭代 30 keywords × 10 pages）
+   - 写 <code>tools/comments_drain.py</code>（curl_cffi + xhshow，遍历 DB 补评论）
+   - 同时跑 <code>python -m crawler.main http-drain --concurrency 8</code>（处理新加入队列）</p>
+<h3 id="path-b-429-notes">🥈 Path B：现有 429 notes 深度分析（即可启动）</h3>
+<p><strong>条件</strong>：不需新数据。</p>
+<p><strong>可执行分析</strong>：
+1. <strong>标题 pattern 挖掘</strong>：
+   - 数字开头（"一个学期写四篇..."）、emoji 用法、痛点句式、问句钩子
+   - 跑 LLM 把 top-50 高赞 note 的标题归类：故事型 / 教程型 / 痛点型 / 工具型
+2. <strong>内容结构分析</strong>：
+   - 字数 vs 互动率回归
+   - 首段 hook（前 50 字）的共性
+   - 图片数量 distribution（图文 note 普遍 6-9 图）
+3. <strong>发布时机</strong>：
+   - publish_time_ms histogram by hour-of-day, day-of-week
+4. <strong>Hashtag 共现网络</strong>：
+   - 解析 <code>tags_json</code>，统计共现，找"留子写论文"周围的 hashtag 集群
+5. <strong>评论需求挖掘</strong>：
+   - 用 LLM 把 1497 条评论分类（提问 / 求资源 / 同感 / 推荐）
+   - 提取"求 prompt"、"求工具链接"等高频询问 → 这是 AcademiCats 产品 feature backlog
+6. <strong>作者类型分析</strong>：
+   - 376 作者按 (notes_count, avg_likes, niche) 聚类
+   - 找"留子写论文"赛道 top 10 KOL → 复制其 angle
+7. <strong>爆款公式</strong>：
+   - 跑 LLM 对比 top-20 vs bottom-20 by likes，提炼 "what makes a note pop"</p>
+<p><strong>用 <code>data/exports/xhs_analysis_package.md</code></strong>（已经存在，646KB）直接喂给 GPT-5 / Claude Opus 出报告。</p>
+<h3 id="path-c">🥉 Path C：多号矩阵长期项目</h3>
+<p><strong>条件</strong>：注册 5-10 个真实账号，每个累积 1-2 周浏览/互动历史。</p>
+<p><strong>执行</strong>：
+- 用 SIM 卡多注册真实号
+- 每个号在真实手机上日均 20 分钟浏览 / 互动（点赞 + 评论 + 关注）
+- 一周后账号成熟，分发给 5 个 Chrome profile
+- 用 multi-worker（<code>worker_id</code> 0-9）并发抓取，每号 / 每 IP 限速
+- 预计产出：10K+ notes / month sustained</p>
+<p><strong>缺点</strong>：时间成本高，规模化难。</p>
+<h3 id="path-dapify">Path D：Apify 第三方付费</h3>
+<p><strong>条件</strong>：付费。</p>
+<p><code>tools/apify_run.py</code> 已经能调用 <code>zhorex/rednote-xiaohongshu-scraper</code> actor：
+- 1000 notes ≈ ¥100 RMB
+- 评论按页计费（10 条评论 ≈ ¥0.08）
+- 快但贵，并且 xhs 反爬升级后 Apify actor 也越来越不稳定</p>
+<p>之前测试：easyapi actor broken；zhorex actor 部分功能被 xhs 屏蔽。</p>
+<h3 id="path-emediacrawler-nanmicoder">Path E：MediaCrawler (NanmiCoder) 集成</h3>
+<p><strong>条件</strong>：1.6K star 开源项目，比我们的更成熟。</p>
+<p>特点：
+- Playwright + signed API + 风控规避（更先进）
+- 但同样需要登录账号才能跑评论 / 搜索
+- 适合作为 Path A 的备份实现</p>
+<p>仓库：<code>https://github.com/NanmiCoder/MediaCrawler</code></p>
+<hr>
+<h2 id="7-academicats">7. 关键词矩阵（按 AcademiCats 产品功能对齐）</h2>
+<blockquote>
+<p>重新分级：跟「产品功能模块」一一对应，不是按"留子写论文"这一个角度。
+下沉用户、一站式、速度、AI 代写、查重去重 = 我们要爬的全部主题。</p>
+</blockquote>
+<h3 id="tier-1a-usp">Tier 1A — 文献检索（核心 USP，必抓）</h3>
+<pre><code>文献检索        文献查找        知网检索        知网技巧
+Google Scholar  Web of Science  Scopus 检索    PubMed
+文献调研        文献搜集        中外文文献      文献查询工具
+英文文献查找    SCI检索         核心期刊检索    文献神器
+</code></pre>
+<h3 id="tier-1b">Tier 1B — 引用 / 参考文献（核心功能）</h3>
+<pre><code>一键引用        Citation         参考文献格式    APA格式
+MLA格式         Chicago         GB7714          EndNote引用
+Zotero引用      文献管理        引用工具        参考文献神器
+</code></pre>
+<h3 id="tier-1c-ai">Tier 1C — AI 代写 / 论文生成（核心功能，最大流量赛道）</h3>
+<pre><code>AI写论文        ChatGPT写论文    DeepSeek写论文  Claude写论文
+Gemini写论文    Kimi写论文       豆包写论文      文心一言写论文
+通义千问写论文   讯飞星火写论文   秘塔AI          橙篇
+AI论文神器      论文一站式       论文生成        论文代写
+开题报告生成     文献综述生成     论文初稿        论文框架
+</code></pre>
+<h3 id="tier-1d-ai">Tier 1D — 查重 / 降重 / AI 检测（核心刚需，下沉痛点）</h3>
+<pre><code>论文查重        知网查重        万方查重        维普查重
+PaperPass       论文降重        降重技巧        降AI率
+AI检测          AI率            AI痕迹          学术不端
+查重避坑        Turnitin       格子达          论文检测
+</code></pre>
+<h3 id="tier-2">Tier 2 — 论文流程辅助（高相关）</h3>
+<pre><code>论文润色        语法润色        学术英语        学术翻译
+论文图表        SCI写作         论文修改        论文修订
+答辩            答辩PPT         答辩准备        审稿
+论文审核        同行评议        论文逻辑         论文结构
+</code></pre>
+<h3 id="tier-3">Tier 3 — 用户场景与痛点（场景关键词）</h3>
+<pre><code>留学生写论文     留学生作业       留学生essay     留学生assignment
+留学生paper      赶ddl           ddl救命         熬夜写论文
+毕业论文         毕业季           本科毕业论文    研究生论文
+研究生日常       博士日常         论文焦虑        论文拖延
+</code></pre>
+<h3 id="tier-4">Tier 4 — 工具生态（竞品 / 周边）</h3>
+<pre><code>Zotero          EndNote         Notion AI       Obsidian论文
+飞书文档         WPS AI          Word论文模板    LaTeX
+ScienceWeaver   秘塔搜索        Perplexity     Felo
+</code></pre>
+<h3 id="tier-5">Tier 5 — 边缘 / 长尾（按需）</h3>
+<pre><code>留学PS          留学CV          推荐信
+留子日常        留学党          海归
+考研日常        期末复习        学习方法
+</code></pre>
+<p><strong>抓取策略</strong>（调整后）：
+- Tier 1A-D：<strong>必爬，每个 keyword 3 种排序（general + popularity + time）</strong>，每排序 15-20 页 → 每关键词 ~40-60 unique notes
+- Tier 2：popularity + time，每关键词 ~30-40 unique
+- Tier 3：popularity only，每关键词 ~20-30
+- Tier 4：popularity only，每关键词 ~10-20
+- Tier 5：低优，按需</p>
+<p><strong>目标产出</strong>：
+- Tier 1A-D 总约 70 个关键词 × 3 排序 × ~50 notes ≈ <strong>~6000-8000 unique notes</strong>（去重后 ~3000）
+- 加 Tier 2-5：<strong>总 5000-8000 unique notes</strong></p>
+<p><strong>核心爆款来源</strong>（基于当前 429 notes 观察）：
+- 「DeepSeek 喂饭指令｜一天完成论文初稿」类（24K 赞） → AI 代写
+- 「关于我一个学期写四篇文献综述」类（34K 赞）→ 一条龙
+- 「两小时就写完了开题报告」类（24K 赞）→ 速度
+- 「博士学姐分享｜文献综述的写作方法」类（16K 赞）→ 教程
+- 上述全部跟我们产品 USP 直接对齐</p>
+<hr>
+<h2 id="8">8. 后期工具（用爬到的数据做什么）</h2>
+<blockquote>
+<p>两个完全不同的用途：
+  - <strong>8A</strong>：辅助 AcademiCats 产品本身（功能优先级、定价、产品 copy）
+  - <strong>8B</strong>：辅助 AcademiCats 的小红书起号（营销、获客）</p>
+</blockquote>
+<h3 id="8a">8A. 反哺产品本身</h3>
+<ol>
+<li>
+<p><strong>功能优先级 backlog</strong>
+   - 评论高频问题 / 抱怨 → 用户最痛的点
+   - 例：评论里反复出现"求降 AI 率方法" → 降重功能要做到极致 + 在产品 onboarding 顶上
+   - 评论里抱怨"知网查重太贵" → 我们提供平替 / 一站式必须算上查重</p>
+</li>
+<li>
+<p><strong>竞品监控</strong>
+   - 爬"AI写论文 + 各品牌"关键词，看每家被夸什么 / 骂什么
+   - 写「竞品 ATSWOT 表」：速度 / 一站式 / 价格 / 查重 / 引用支持
+   - 我们怎么定位：<strong>速度 + 一条龙</strong>（市面上没人同时做这两点）</p>
+</li>
+<li>
+<p><strong>下沉用户语言</strong>
+   - 爬到的标题、正文、评论 → 用户真实说话方式
+   - 产品文案 / onboarding 语气直接抄过来（不要写"学术工作台"，要写"AI 一键搞定毕业论文"）</p>
+</li>
+<li>
+<p><strong>定价信号挖掘</strong>
+   - 评论里"某某工具 9.9 / 30 / 198 元" → 用户接受的价格带
+   - "划算 / 太贵 / 收费看不到" → 定价策略和展示方式</p>
+</li>
+<li>
+<p><strong>关键 use case 整理</strong>
+   - 把高赞 note 的真实工作流 cluster 成 5-10 个标准 use case
+   - 每个 use case 是产品的一个 demo 场景</p>
+</li>
+</ol>
+<h3 id="8b">8B. 小红书起号 + 内容矩阵</h3>
+<ol>
+<li>
+<p><strong>赛道选择</strong>
+   - 基于 DB 的 author × engagement 聚类，找当前 CR（competition ratio）最低、平均互动最高的细分赛道
+   - 例如可能不是"AI 写论文"（已红海）而是"知网查重避坑"</p>
+</li>
+<li>
+<p><strong>爆款公式</strong>
+   - 跑 LLM 对比 top-20 vs bottom-20 by likes（同主题），提炼 hook / 节奏 / 字数 / 配图模式
+   - 输出「AcademiCats 起号 SOP」文档</p>
+</li>
+<li>
+<p><strong>内容日历</strong>
+   - 基于 publish_time 分布 → 一周 5 帖建议时间表
+   - 配套：每帖给 prompt 模板（不是 AI 全写，给 hook + 结构 + 关键词）</p>
+</li>
+<li>
+<p><strong>互动 / 评论运营</strong>
+   - 高频问题清单 → 评论自动回复 / 半自动回复模板
+   - 评论筛选优先级（按 like_count + 是否含转化意图，如"求私信"）</p>
+</li>
+<li>
+<p><strong>冷启动 100 帖规划</strong>
+   - 30 帖工具教程型（"DeepSeek 写论文 prompt 大全"）
+   - 30 帖痛点共鸣型（"赶 ddl 一晚上写完论文"）
+   - 30 帖产品 demo 型（明面是教程，暗里是 AcademiCats 入口）
+   - 10 帖互动型（投票 / 提问 / 求建议）</p>
+</li>
+</ol>
+<h3 id="8c">8C. 数据基础设施</h3>
+<ul>
+<li><strong>持续爬取</strong>：cron job 每周补 30-50 新 notes + 刷新现有 note 计数</li>
+<li><strong>向量化语料</strong>：notes + comments embed 到 vector DB（pgvector / weaviate）</li>
+<li>支持产品端 RAG（用户问"怎么降重" → 检索高赞 xhs 教程 → 生成答案）</li>
+<li>支持内部分析（用语义搜索找特定 cluster）</li>
+<li><strong>标注</strong>：人工标 100 篇为"AcademiCats 高相关 / 中 / 低"，训练分类器自动筛后续 raw data</li>
+<li><strong>关键词扩词系统</strong>：从评论里挖新的高频长尾词 → 反馈到爬取关键词矩阵</li>
+</ul>
+<hr>
+<h2 id="9-prompt">9. 切换对话后的接续 Prompt 模板</h2>
+<p>把这个直接复制给新 Claude：</p>
+<pre><code>我有一个本地项目 H:\xhs，是为我自己的 AI 学术工作台产品 AcademiCats 爬小红书数据用的。
+
+【背景与计划】请先 cat 或读 H:\xhs\MASTER_PLAN.md，里面有完整产品方向、当前数据库快照、技术架构、未来扩展路径。
+
+【当前状态】429 notes / 1497 comments / 376 authors 在 data/xhs.db。看板在 data/exports/dashboard.html。所有匿名 + 新号 discovery 路径已被 xhs 在 2026-05 关闭。
+
+【我现在想做】XXX（填具体任务）
+
+【约束】
+- Windows 10 + PowerShell + .venv（已装 curl_cffi, DrissionPage, xhshow 等）
+- 不要碰 state/profile-login/（里面是当前登录态）
+- 看板会自动推到 GitHub Pages，注意 no-referrer + https URL
+
+【可执行】请先看 MASTER_PLAN.md 的&quot;未来扩展路径&quot;小节，我们应该走 Path X。
+</code></pre>
+<hr>
+<h2 id="10">10. 紧急 / 常用命令速查</h2>
+<pre><code class="language-powershell"># 看 DB 状态
+.venv\Scripts\python.exe tools\snapshot.py
+
+# 看现有覆盖
+.venv\Scripts\python.exe tools\check_coverage.py
+
+# 跑 detail drain（curl_cffi，处理 pending 队列）
+.venv\Scripts\python.exe -m crawler.main http-drain --concurrency 8
+
+# 跑 detail（browser，用于评论）
+.venv\Scripts\python.exe -m crawler.main detail --comment-pages 5
+
+# 弹 Chrome 扫码登录
+.venv\Scripts\python.exe tools\login_extract.py
+
+# 渲染看板
+.venv\Scripts\python.exe -m crawler.main dashboard
+
+# 重建分析包
+.venv\Scripts\python.exe tools\build_analysis_package.py
+
+# 关键词搜索 discover
+.venv\Scripts\python.exe -m crawler.main search --keywords &quot;AI写论文,论文写作&quot; --pages 15 --sort popularity_descending
+
+# 看队列里 pending 多少
+.venv\Scripts\python.exe -c &quot;import sqlite3; print(sqlite3.connect('data/xhs.db').execute(\&quot;SELECT status, COUNT(*) FROM discover_queue GROUP BY status\&quot;).fetchall())&quot;
+</code></pre>
+<hr>
+<h2 id="11-todo">11. 已知遗留问题 / TODO</h2>
+<ol>
+<li><strong>48 个 queue 失败的 note</strong> — <code>discover_queue WHERE status='error'</code>，主要因 token 失效或 deleted。可重试 with <code>--retry-errors</code> 但价值不大。</li>
+<li><strong>321 / 429 notes 评论数 = 0</strong> — 不是没评论，是 xhs SSR 不渲染。需 Path A 老号补齐。</li>
+<li><strong>图片有部分缺失</strong> — 个别 note 的 image_list 是空，因 SSR 截断或图片域名换了。约 5-10 个 note 受影响。</li>
+<li><strong>dashboard.html 引用 xhs CDN 图片</strong> — 用 <code>&lt;meta name="referrer" content="no-referrer"&gt;</code> 绕过 referrer 检查。GitHub Pages 上能显示。</li>
+<li><strong><code>xhs_analysis_package.md</code> 是手动 rebuild 的</strong> — 想自动化要写个 cron。</li>
+</ol>
+<hr>
+<h2 id="12">12. 一句话总结</h2>
+<p><strong>AcademiCats = 面向下沉学生群体的一站式 AI 论文一条龙服务（检索 → 引用 → AI 代写 → 查重去重 → 审核 → 修改）。已建：429 notes 高质量学术写作 + AI 代写赛道语料 + 完整爬取基础设施。已堵：xhs 2026-05 大幅升级反爬，所有匿名 + 新号路径全死。下一步：用户用真实老号登录解锁 signed API（Path A），或就用现有数据出深度分析（Path B）。</strong></p>
+</body>
+</html>
